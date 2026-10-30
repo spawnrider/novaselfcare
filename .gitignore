@@ -1,0 +1,17 @@
+node_modules/
+dist/
+out-tsc/
+.angular/
+# Code généré par Orval (source de vérité = specs/*.yaml)
+apps/selfcare-web/src/app/api/*/
+!apps/selfcare-web/src/app/api/README.md
+cms/.tmp/
+cms/node_modules/
+cms/build/
+cms/.strapi/
+.env
+
+# Fichiers locaux
+.DS_Store
+.claude/
+.archify/

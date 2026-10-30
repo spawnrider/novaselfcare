@@ -1,0 +1,144 @@
+openapi: 3.0.3
+info:
+  title: Nova Selfcare – Options & Support API
+  version: 1.0.0
+  description: Options souscriptibles et demandes de support (parcours transactionnels).
+tags:
+  - name: options
+  - name: support
+paths:
+  /api/options:
+    get:
+      tags: [options]
+      operationId: listOptions
+      summary: Options disponibles et leur état
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Option' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/options/{id}/subscribe:
+    post:
+      tags: [options]
+      operationId: subscribeOption
+      summary: Activer une option
+      parameters:
+        - $ref: '#/components/parameters/OptionId'
+      responses:
+        '200':
+          description: Option activée
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Option' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/NotEligible' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/options/{id}/unsubscribe:
+    post:
+      tags: [options]
+      operationId: unsubscribeOption
+      summary: Désactiver une option
+      parameters:
+        - $ref: '#/components/parameters/OptionId'
+      responses:
+        '200':
+          description: Option désactivée
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Option' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/support/cases:
+    post:
+      tags: [support]
+      operationId: createSupportCase
+      summary: Ouvrir une demande de support
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SupportCaseRequest' }
+      responses:
+        '201':
+          description: Demande créée
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SupportCase' }
+        '500': { $ref: '#/components/responses/ServerError' }
+components:
+  parameters:
+    OptionId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+  responses:
+    Forbidden:
+      description: Droits insuffisants
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Conflict:
+      description: Option déjà active
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotEligible:
+      description: Client non éligible (erreur fonctionnelle)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    ServerError:
+      description: Erreur technique
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Option:
+      type: object
+      required: [id, label, description, active, eligible, monthlyPrice]
+      properties:
+        id:
+          type: string
+          enum: [e-invoice, usage-alert, premium-support]
+          example: e-invoice
+        label: { type: string, example: Facture électronique }
+        description: { type: string, example: "Recevez vos factures par e-mail, sans papier." }
+        active: { type: boolean, example: false }
+        eligible: { type: boolean, example: true }
+        monthlyPrice: { type: number, format: double, example: 0 }
+    SupportCaseRequest:
+      type: object
+      required: [topic, message]
+      properties:
+        topic:
+          type: string
+          enum: [option, billing, other]
+        optionId: { type: string }
+        message: { type: string, maxLength: 2000 }
+    SupportCase:
+      type: object
+      required: [id, status, createdAt]
+      properties:
+        id: { type: string, example: CASE-31337 }
+        status:
+          type: string
+          enum: [open]
+          example: open
+        createdAt: { type: string, format: date-time, example: '2026-10-23T09:00:00Z' }
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        code:
+          type: string
+          enum: [OPTION_NOT_ELIGIBLE, OPTION_ALREADY_ACTIVE, FORBIDDEN, TECHNICAL_ERROR]

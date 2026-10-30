@@ -1,0 +1,14 @@
+{
+  "kind": "collectionType",
+  "collectionName": "banners",
+  "info": { "singularName": "banner", "pluralName": "banners", "displayName": "Banner" },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "message": { "type": "text", "required": true },
+    "variant": { "type": "enumeration", "enum": ["info", "promo", "warning"], "default": "info", "required": true },
+    "ctaLabel": { "type": "string" },
+    "ctaUrl": { "type": "string" },
+    "priority": { "type": "integer", "default": 1, "required": true }
+  }
+}

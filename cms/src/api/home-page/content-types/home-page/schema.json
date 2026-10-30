@@ -1,0 +1,13 @@
+{
+  "kind": "singleType",
+  "collectionName": "home_pages",
+  "info": { "singularName": "home-page", "pluralName": "home-pages", "displayName": "Home page" },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "greeting": { "type": "string", "required": true },
+    "marketingText": { "type": "text" },
+    "helpTitle": { "type": "string", "required": true },
+    "helpText": { "type": "text", "required": true }
+  }
+}

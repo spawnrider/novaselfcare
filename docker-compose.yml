@@ -1,0 +1,21 @@
+# Mode HYBRID : Strapi réel pour le contenu éditorial, API métier mockées par MSW.
+#   docker compose up -d strapi   →  http://localhost:1337/admin  (créer le compte admin au 1er lancement)
+#   npm run start:hybrid          →  http://localhost:4200
+services:
+  strapi:
+    build: ./cms
+    ports:
+      - '1337:1337'
+    environment:
+      HOST: 0.0.0.0
+      PORT: 1337
+      DATABASE_FILENAME: .tmp/data.db
+    volumes:
+      - strapi-data:/opt/app/.tmp
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://localhost:1337/api/home-page').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+volumes:
+  strapi-data:

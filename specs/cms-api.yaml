@@ -1,0 +1,150 @@
+openapi: 3.0.3
+info:
+  title: Nova Selfcare – CMS API (Strapi 5)
+  version: 1.0.0
+  description: |
+    Contrat aligné sur le format REST **Strapi 5** (réponse « aplatie » : `{ data, meta }`,
+    identifiant `documentId`). Les chemins suivent les conventions Strapi :
+    single type `home-page`, collection types `banners`, `help-articles`, `faqs`.
+    Le même contrat sert à générer le client Angular ET le mock MSW utilisé en MOCK_FULL.
+tags:
+  - name: cms
+paths:
+  /api/home-page:
+    get:
+      tags: [cms]
+      operationId: homePage
+      summary: Contenu éditorial de la page d’accueil (single type)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HomePageResponse' }
+  /api/banners:
+    get:
+      tags: [cms]
+      operationId: listBanners
+      summary: Bannières actives
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BannerListResponse' }
+  /api/help-articles:
+    get:
+      tags: [cms]
+      operationId: listHelpArticles
+      summary: Articles d’aide
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HelpArticleListResponse' }
+  /api/faqs:
+    get:
+      tags: [cms]
+      operationId: listFaqs
+      summary: Questions fréquentes
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FaqListResponse' }
+components:
+  schemas:
+    StrapiDocument:
+      type: object
+      required: [id, documentId]
+      properties:
+        id: { type: integer, example: 1 }
+        documentId: { type: string, example: k3x9q2m7v1p8r5t0w4z6y2a1 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        publishedAt: { type: string, format: date-time, nullable: true }
+    Pagination:
+      type: object
+      required: [page, pageSize, pageCount, total]
+      properties:
+        page: { type: integer, example: 1 }
+        pageSize: { type: integer, example: 25 }
+        pageCount: { type: integer, example: 1 }
+        total: { type: integer, example: 2 }
+    CollectionMeta:
+      type: object
+      properties:
+        pagination: { $ref: '#/components/schemas/Pagination' }
+    HomePage:
+      allOf:
+        - $ref: '#/components/schemas/StrapiDocument'
+        - type: object
+          required: [title, greeting, helpTitle, helpText]
+          properties:
+            title: { type: string, example: Votre espace client Nova }
+            greeting: { type: string, description: 'Gabarit, {firstName} est remplacé côté front', example: 'Bonjour {firstName},' }
+            marketingText: { type: string, example: Pilotez votre énergie en toute simplicité. }
+            helpTitle: { type: string, example: 'Besoin d’aide ?' }
+            helpText: { type: string, example: "Nos conseillers vous répondent du lundi au samedi, de 8h à 20h." }
+    HomePageResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/HomePage' }
+        meta: { type: object }
+    Banner:
+      allOf:
+        - $ref: '#/components/schemas/StrapiDocument'
+        - type: object
+          required: [title, message, variant, priority]
+          properties:
+            title: { type: string, example: Passez à la facture électronique }
+            message: { type: string, example: Activez l’option en un clic depuis votre espace. }
+            variant: { type: string, enum: [info, promo, warning], example: promo }
+            ctaLabel: { type: string, example: Découvrir }
+            ctaUrl: { type: string, example: /options }
+            priority: { type: integer, example: 1 }
+    BannerListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Banner' }
+        meta: { $ref: '#/components/schemas/CollectionMeta' }
+    HelpArticle:
+      allOf:
+        - $ref: '#/components/schemas/StrapiDocument'
+        - type: object
+          required: [title, slug, summary]
+          properties:
+            title: { type: string, example: Comprendre ma facture }
+            slug: { type: string, example: comprendre-ma-facture }
+            summary: { type: string, example: Les lignes de votre facture expliquées simplement. }
+    HelpArticleListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/HelpArticle' }
+        meta: { $ref: '#/components/schemas/CollectionMeta' }
+    Faq:
+      allOf:
+        - $ref: '#/components/schemas/StrapiDocument'
+        - type: object
+          required: [question, answer, order]
+          properties:
+            question: { type: string, example: 'Comment modifier mon RIB ?' }
+            answer: { type: string, example: Rendez-vous dans Mon profil > Paiement. }
+            order: { type: integer, example: 1 }
+    FaqListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Faq' }
+        meta: { $ref: '#/components/schemas/CollectionMeta' }

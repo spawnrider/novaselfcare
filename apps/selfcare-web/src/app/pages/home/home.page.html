@@ -1,0 +1,98 @@
+<section class="hero">
+  @if (home.hasValue()) {
+    <p class="eyebrow">{{ home.value().data.title }}</p>
+  }
+  @if (customer.hasValue()) {
+    <h1>{{ greeting() }}</h1>
+  } @else if (customer.error()) {
+    <h1>Bonjour,</h1>
+  } @else {
+    <nova-skeleton [lines]="[40]" />
+  }
+  @if (home.hasValue() && home.value().data.marketingText) {
+    <p class="lead">{{ home.value().data.marketingText }}</p>
+  }
+</section>
+
+@if (customer.hasValue() && customer.value().paymentStatus === 'late') {
+  <div class="alert warning" role="alert">
+    <strong>Paiement en attente.</strong> Votre dernière facture n’a pas encore été réglée.
+    <a routerLink="/billing">Voir mes factures</a>
+  </div>
+}
+
+<div class="grid">
+  <article class="card">
+    <h2>Mon contrat</h2>
+    @if (mainContract(); as c) {
+      <p class="kpi">{{ energyLabel() }}</p>
+      <p>
+        Votre contrat {{ energyLabel() }} est
+        <span class="badge" [attr.data-status]="c.status">{{ c.status === 'active' ? 'actif' : c.status }}</span>
+      </p>
+      <p class="muted">{{ c.offerName }} · depuis le {{ c.startDate | date: 'longDate' }}</p>
+    } @else if (contracts.error()) {
+      <p class="error">Contrat indisponible pour le moment.</p>
+    } @else {
+      <nova-skeleton />
+    }
+  </article>
+
+  <article class="card">
+    <h2>Prochaine facture estimée</h2>
+    @if (next.hasValue()) {
+      <p class="kpi">{{ next.value().amount | currency: next.value().currency }}</p>
+      <p class="muted">Émise vers le {{ next.value().expectedDate | date: 'longDate' }}</p>
+    } @else if (next.error()) {
+      <p class="error">Estimation indisponible.</p>
+      <button class="link" (click)="next.reload()">Réessayer</button>
+    } @else {
+      <nova-skeleton />
+    }
+  </article>
+
+  <article class="card">
+    <h2>Ma consommation</h2>
+    @if (usage.hasValue()) {
+      @if (usage.value().currentMonthKwh === 0) {
+        <p class="muted">Pas encore de relevé ce mois-ci.</p>
+      } @else {
+        <p class="kpi" [class.up]="usage.value().trendPercent > 0">
+          {{ usage.value().trendPercent > 0 ? '+' : '' }}{{ usage.value().trendPercent | number: '1.0-1' }} %
+        </p>
+        <p>
+          Votre consommation est en {{ usage.value().trendPercent >= 0 ? 'hausse' : 'baisse' }} de
+          {{ usage.value().trendPercent | number: '1.0-1' }} % ce mois-ci
+        </p>
+      }
+      <a routerLink="/billing">Voir le détail</a>
+    } @else if (usage.error()) {
+      <p class="error">Consommation indisponible.</p>
+      <button class="link" (click)="usage.reload()">Réessayer</button>
+    } @else {
+      <nova-skeleton />
+    }
+  </article>
+</div>
+
+@for (b of sortedBanners(); track b.documentId) {
+  <aside class="banner" [attr.data-variant]="b.variant">
+    <div>
+      <strong>{{ b.title }}</strong>
+      <p>{{ b.message }}</p>
+    </div>
+    @if (b.ctaUrl) {
+      <a class="btn" [routerLink]="b.ctaUrl">{{ b.ctaLabel ?? 'En savoir plus' }}</a>
+    }
+  </aside>
+}
+
+@if (home.hasValue()) {
+  <section class="card help">
+    <h2>{{ home.value().data.helpTitle }}</h2>
+    <p>{{ home.value().data.helpText }}</p>
+    <a routerLink="/aide">Centre d’aide</a>
+  </section>
+} @else if (home.error()) {
+  <p class="muted">Contenu éditorial indisponible (CMS injoignable).</p>
+}

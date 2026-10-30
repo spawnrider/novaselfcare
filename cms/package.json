@@ -1,0 +1,21 @@
+{
+  "name": "nova-cms",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Strapi 5 – contenu éditorial Nova Selfcare (mode HYBRID)",
+  "scripts": {
+    "develop": "strapi develop",
+    "start": "strapi start",
+    "build": "strapi build"
+  },
+  "dependencies": {
+    "@strapi/strapi": "^5.50.0",
+    "@strapi/plugin-users-permissions": "^5.50.0",
+    "better-sqlite3": "^12.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-router-dom": "^6.30.0",
+    "styled-components": "^6.1.0"
+  },
+  "engines": { "node": ">=20.0.0 <=24.x.x" }
+}

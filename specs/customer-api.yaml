@@ -1,0 +1,84 @@
+openapi: 3.0.3
+info:
+  title: Nova Selfcare – Customer API
+  version: 1.0.0
+  description: Identité du client connecté et contrats souscrits.
+tags:
+  - name: customer
+paths:
+  /api/customer/me:
+    get:
+      tags: [customer]
+      operationId: currentCustomer
+      summary: Client connecté
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Customer' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/contracts:
+    get:
+      tags: [customer]
+      operationId: listContracts
+      summary: Contrats du client
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Contract' }
+        '500': { $ref: '#/components/responses/ServerError' }
+components:
+  responses:
+    ServerError:
+      description: Erreur technique
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Customer:
+      type: object
+      required: [id, firstName, lastName, email, segment]
+      properties:
+        id: { type: string, example: CUS-000042 }
+        firstName: { type: string, example: Clara }
+        lastName: { type: string, example: Martin }
+        email: { type: string, format: email, example: clara.martin@example.com }
+        segment:
+          type: string
+          enum: [standard, premium]
+          example: standard
+        paymentStatus:
+          type: string
+          description: Situation de paiement (pilote le bandeau « retard de paiement »)
+          enum: [up-to-date, late]
+          example: up-to-date
+    Contract:
+      type: object
+      required: [id, energy, status, offerName, startDate]
+      properties:
+        id: { type: string, example: CTR-2024-0001 }
+        energy:
+          type: string
+          enum: [electricity, gas]
+          example: electricity
+        status:
+          type: string
+          enum: [active, pending, terminated]
+          example: active
+        offerName: { type: string, example: Nova Électricité Verte }
+        startDate: { type: string, format: date, example: '2024-03-01' }
+        meterId: { type: string, example: PDL-09876543210987 }
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        code: { type: string }

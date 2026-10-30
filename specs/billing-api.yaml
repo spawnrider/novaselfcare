@@ -1,0 +1,147 @@
+openapi: 3.0.3
+info:
+  title: Nova Selfcare – Billing API
+  version: 1.0.0
+  description: Factures, estimation de la prochaine facture et consommation.
+tags:
+  - name: billing
+paths:
+  /api/invoices:
+    get:
+      tags: [billing]
+      operationId: listInvoices
+      summary: Factures du client (plus récentes en premier)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Invoice' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/invoices/{id}/document:
+    get:
+      tags: [billing]
+      operationId: downloadInvoice
+      summary: Télécharger le PDF d’une facture
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: PDF
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '404':
+          description: Facture introuvable
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+  /api/billing/next-invoice:
+    get:
+      tags: [billing]
+      operationId: nextInvoiceEstimate
+      summary: Estimation de la prochaine facture
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NextInvoiceEstimate' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/usage:
+    get:
+      tags: [billing]
+      operationId: usageHistory
+      summary: Historique de consommation mensuelle
+      parameters:
+        - name: period
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/UsagePeriod' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UsageHistory' }
+        '500': { $ref: '#/components/responses/ServerError' }
+  /api/usage/summary:
+    get:
+      tags: [billing]
+      operationId: usageSummary
+      summary: Tendance de consommation du mois en cours
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UsageSummary' }
+        '500': { $ref: '#/components/responses/ServerError' }
+components:
+  responses:
+    ServerError:
+      description: Erreur technique
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Invoice:
+      type: object
+      required: [id, issueDate, dueDate, amount, currency, status]
+      properties:
+        id: { type: string, example: INV-2026-09 }
+        issueDate: { type: string, format: date, example: '2026-09-30' }
+        dueDate: { type: string, format: date, example: '2026-10-15' }
+        amount: { type: number, format: double, example: 79.4 }
+        currency: { type: string, example: EUR }
+        status:
+          type: string
+          enum: [paid, due, overdue]
+          example: paid
+    NextInvoiceEstimate:
+      type: object
+      required: [amount, currency, expectedDate]
+      properties:
+        amount: { type: number, format: double, example: 84.2 }
+        currency: { type: string, example: EUR }
+        expectedDate: { type: string, format: date, example: '2026-10-31' }
+    UsagePeriod:
+      type: string
+      enum: [3m, 6m, 12m]
+      default: 6m
+    UsagePoint:
+      type: object
+      required: [month, kwh]
+      properties:
+        month: { type: string, description: 'Mois au format YYYY-MM', example: '2026-09' }
+        kwh: { type: number, example: 312 }
+    UsageHistory:
+      type: object
+      required: [period, unit, points]
+      properties:
+        period: { $ref: '#/components/schemas/UsagePeriod' }
+        unit: { type: string, enum: [kWh], example: kWh }
+        points:
+          type: array
+          items: { $ref: '#/components/schemas/UsagePoint' }
+    UsageSummary:
+      type: object
+      required: [currentMonthKwh, previousMonthKwh, trendPercent]
+      properties:
+        currentMonthKwh: { type: number, example: 349 }
+        previousMonthKwh: { type: number, example: 312 }
+        trendPercent: { type: number, description: 'Évolution vs mois précédent, en %', example: 12 }
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        code: { type: string }

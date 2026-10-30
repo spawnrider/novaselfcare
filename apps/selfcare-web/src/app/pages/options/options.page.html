@@ -1,0 +1,46 @@
+<h1>Mes options</h1>
+
+@if (options.isLoading() && !options.hasValue()) {
+  <nova-skeleton [lines]="[100, 100, 100]" />
+} @else if (options.error()) {
+  <p class="error">Impossible de charger vos options.</p>
+  <button class="btn secondary" (click)="options.reload()">Réessayer</button>
+} @else if (options.hasValue()) {
+  <ul class="options">
+    @for (o of options.value(); track o.id) {
+      <li class="card option">
+        <div>
+          <h2>{{ o.label }}</h2>
+          <p>{{ o.description }}</p>
+          <p class="muted">
+            {{ o.monthlyPrice === 0 ? 'Incluse' : (o.monthlyPrice | currency: 'EUR') + ' / mois' }}
+            · <span class="badge" [attr.data-status]="o.active ? 'active' : 'inactive'">{{ o.active ? 'Active' : 'Inactive' }}</span>
+          </p>
+        </div>
+        <button
+          class="btn"
+          [class.secondary]="o.active"
+          [disabled]="pending() === o.id || !o.eligible"
+          (click)="toggle(o)"
+        >
+          {{ pending() === o.id ? 'Traitement…' : o.active ? 'Désactiver' : 'Activer' }}
+        </button>
+
+        @if (feedback(); as f) {
+          @if (f.optionId === o.id) {
+            <div class="alert" [class]="f.kind" role="status">
+              {{ f.message }}
+              @if (f.code) {<code>{{ f.code }}</code>}
+              @if (f.kind !== 'success') {
+                <button class="link" (click)="contactSupport(o.id)">Contacter le support</button>
+              }
+              @if (supportCase(); as id) {
+                <p>Demande <strong>{{ id }}</strong> enregistrée. Un conseiller vous recontacte.</p>
+              }
+            </div>
+          }
+        }
+      </li>
+    }
+  </ul>
+}

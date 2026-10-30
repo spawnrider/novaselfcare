@@ -1,0 +1,74 @@
+<h1>Factures & consommation</h1>
+
+<section class="card">
+  <header class="card-header">
+    <h2>Ma consommation</h2>
+    <div class="segmented" role="group" aria-label="Période">
+      @for (p of periods; track p.id) {
+        <button [class.active]="period() === p.id" (click)="period.set(p.id)">{{ p.label }}</button>
+      }
+    </div>
+  </header>
+
+  @if (usage.isLoading()) {
+    <nova-skeleton [lines]="[100, 100, 100]" />
+  } @else if (usage.error()) {
+    <p class="error">Impossible de charger la consommation.</p>
+    <button class="btn secondary" (click)="usage.reload()">Réessayer</button>
+  } @else if (bars().length === 0) {
+    <p class="muted">Aucune donnée de consommation pour le moment.</p>
+  } @else {
+    <div class="chart" role="img" aria-label="Consommation mensuelle en kWh">
+      @for (b of bars(); track b.month) {
+        <div class="chart-col" [attr.title]="b.label + ' : ' + (b.kwh | number) + ' kWh'">
+          <span class="chart-value">{{ b.kwh | number: '1.0-0' }}</span>
+          <div class="chart-bar" [style.height.%]="b.h * 0.78"></div>
+          <span class="chart-label">{{ b.label }}</span>
+        </div>
+      }
+    </div>
+    <p class="muted chart-unit">kWh par mois</p>
+  }
+</section>
+
+<section class="card">
+  <h2>Mes factures</h2>
+  @if (invoices.isLoading()) {
+    <nova-skeleton [lines]="[100, 100, 100, 100]" />
+  } @else if (invoiceError(); as e) {
+    <div class="alert error" role="alert">
+      {{ e.message }} @if (e.code) {<code>{{ e.code }}</code>}
+    </div>
+    <button class="btn secondary" (click)="invoices.reload()">Réessayer</button>
+  } @else if (invoices.hasValue() && invoices.value().length === 0) {
+    <div class="empty">
+      <p><strong>Aucune facture disponible pour le moment.</strong></p>
+      <p class="muted">Votre première facture sera générée à la fin du mois.</p>
+    </div>
+  } @else if (invoices.hasValue()) {
+    <table class="table">
+      <thead>
+        <tr><th>Facture</th><th>Émise le</th><th>Échéance</th><th>Montant</th><th>Statut</th><th></th></tr>
+      </thead>
+      <tbody>
+        @for (inv of invoices.value(); track inv.id) {
+          <tr [class.overdue]="inv.status === 'overdue'">
+            <td>{{ inv.id }}</td>
+            <td>{{ inv.issueDate | date: 'mediumDate' }}</td>
+            <td>{{ inv.dueDate | date: 'mediumDate' }}</td>
+            <td>{{ inv.amount | currency: inv.currency }}</td>
+            <td><span class="badge" [attr.data-status]="inv.status">{{ statusLabel[inv.status] }}</span></td>
+            <td>
+              <button class="btn small" [disabled]="downloading() === inv.id" (click)="download(inv)">
+                {{ downloading() === inv.id ? '…' : 'Télécharger' }}
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (downloadError(); as msg) {
+      <p class="error">{{ msg }}</p>
+    }
+  }
+</section>
